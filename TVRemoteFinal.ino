@@ -18,12 +18,12 @@ void setup() {
   // put your setup code here, to run once:
   Serial.begin(9600); // for debug purpuses
   while (!Serial) {
-    ; // wait for serial port to connect. Needed for native USB port only
+    ; // wait for serial port to connect. needed for native USB port only
   }
-  Serial.println("TRANSMISSION");
-  
+  Serial.println("TV REMOTE");
+
   btSerial.begin(38400); //begin bluetooth serial port
-  
+
   //set mode to idle
   isLearning = false;
   isSending = false;
@@ -33,7 +33,7 @@ void setup() {
 }
 
 void loop() {
-
+  // put your main code here, to run repeatedly:
   String input; //store the input of bluetooth module
 
   //if ther are an input in bluetooth module
@@ -63,7 +63,6 @@ void loop() {
 
   //ir emitting
   if (isAvailable && isSending) {
-    Serial.println(input);
     int count = 0;
     int pos1, pos2, pos3;
 
@@ -81,48 +80,66 @@ void loop() {
       }
     }
     long data = input.substring(0, pos1).toInt();
-    int type = input.substring(pos1+1, pos2).toInt();
-    int bits = input.substring(pos2+1).toInt();
-    
-    //for debugging
-    Serial.println("==== Input ====")
-    Serial.print("Data: ")
-    Serial.println(data);
-    Serial.print("Type: ")
-    Serial.println(type);
-    Serial.print("Bits: ")
-    Serial.println(bits);
+    int decode_type = input.substring(pos1 + 1, pos2).toInt();
+    int bits = input.substring(pos2 + 1).toInt();
 
     //emit ir according to the type
-    if (type == NEC) {
-      irsend.sendNEC(data, bits);
-    }
-    else if (type == SONY) {
-      irsend.sendSony(data, bits);
-    }
-    else if (type == RC5) {
-      irsend.sendRC5(data, bits);
-    }
-    else if (type == RC6) {
-      irsend.sendRC6(data, bits);
-    }else{
-      //unknown encoding types
-      Serial.println("Other");
+    switch (decode_type) {
+      case NEC  :
+        irsend.sendNEC(data, bits);
+        Serial.print("NEC ("); //for debugging
+        break;
+      case SONY :
+        irsend.sendSony(data, bits);
+        Serial.print("SONY ("); //for debugging
+        break;
+      case RC5  :
+        irsend.sendRC5(data, bits);
+        Serial.print("RC5 ("); //for debugging
+        break;
+      case RC6  :
+        irsend.sendRC6(data, bits);
+        Serial.print("RC6 ("); //for debugging
+        break;
+      default   :
+        Serial.print("UNKNOWN ("); //type not equal to above declared types (ignore signal)
     }
 
+    //for debugging
+    Serial.print("data_long: ");
+    Serial.print(data);
+    Serial.print(" data_hex: ");
+    Serial.print(data, HEX);
+    Serial.print(" bits: ");
+    Serial.print(bits);
+    Serial.print(" type: ");
+    Serial.print(decode_type);
+    Serial.println(")");
   }
 
   //ir receiving
   if (isLearning) {
     if (irrecv.decode(&results)) {
       //make string to send
+      int decode_type = results.decode_type;
       String output = (String)results.value + "," +
                       (String)results.decode_type + "," +
                       (String)results.bits;
+
+      //for debugging
+      switch (decode_type) {
+        case NEC  : Serial.print("NEC: "); break;
+        case SONY : Serial.print("SONY: "); break;
+        case RC5  : Serial.print("RC5: "); break;
+        case RC6  : Serial.print("RC6: "); break;
+        default   :
+          output = "-1"; //if the encode type is not a one defined above. send unknown signal via bluetooth
+          Serial.print("UNKNOWN: "); break;
+      }
+
       btSerial.println(output);
-      Serial.println(output; //for debugging
       irrecv.resume(); //resume ir receiver
-      delay(100);
+      delay(200); //delay program
     }
   }
 }
