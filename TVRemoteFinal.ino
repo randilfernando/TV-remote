@@ -1,8 +1,7 @@
-
 #include <SoftwareSerial.h>
 #include <IRremote.h>
 
-SoftwareSerial btSerial(11, 10); //make virtual serial port
+SoftwareSerial btSerial(10, 11); //make virtual serial port
 
 int RECV_PIN = 12; //IR receiving pin
 IRrecv irrecv(RECV_PIN); //make IRRemote library object to receive IR
@@ -22,7 +21,7 @@ void setup() {
   }
   Serial.println("TV REMOTE");
 
-  btSerial.begin(38400); //begin bluetooth serial port
+  btSerial.begin(9600); //begin bluetooth serial port
 
   //set mode to idle
   isLearning = false;
@@ -106,15 +105,9 @@ void loop() {
     }
 
     //for debugging
-    Serial.print("data_long: ");
-    Serial.print(data);
-    Serial.print(" data_hex: ");
-    Serial.print(data, HEX);
-    Serial.print(" bits: ");
-    Serial.print(bits);
-    Serial.print(" type: ");
-    Serial.print(decode_type);
+    Serial.print(input);
     Serial.println(")");
+    irrecv.enableIRIn();
   }
 
   //ir receiving
@@ -125,6 +118,7 @@ void loop() {
       String output = (String)results.value + "," +
                       (String)results.decode_type + "," +
                       (String)results.bits;
+      boolean canSend = true;
 
       //for debugging
       switch (decode_type) {
@@ -133,13 +127,16 @@ void loop() {
         case RC5  : Serial.print("RC5: "); break;
         case RC6  : Serial.print("RC6: "); break;
         default   :
-          output = "-1"; //if the encode type is not a one defined above. send unknown signal via bluetooth
+          canSend = false; //if the encode type is not a one defined above. send unknown signal via bluetooth
           Serial.print("UNKNOWN: "); break;
       }
 
-      btSerial.println(output);
-      irrecv.resume(); //resume ir receiver
+      if (results.bits == 0) canSend = false;
+
+      Serial.println(output);
+      if (canSend) btSerial.println(output);
       delay(200); //delay program
+      irrecv.resume(); //resume ir receiver
     }
   }
 }
