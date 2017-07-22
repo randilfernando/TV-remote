@@ -84,23 +84,43 @@ void loop() {
 
     //emit ir according to the type
     switch (decode_type) {
-      case NEC  :
+      case NEC      :
         irsend.sendNEC(data, bits);
         Serial.print("NEC ("); //for debugging
         break;
-      case SONY :
+      case SONY     :
         irsend.sendSony(data, bits);
         Serial.print("SONY ("); //for debugging
         break;
-      case RC5  :
+      case RC5      :
         irsend.sendRC5(data, bits);
         Serial.print("RC5 ("); //for debugging
         break;
-      case RC6  :
+      case RC6      :
         irsend.sendRC6(data, bits);
         Serial.print("RC6 ("); //for debugging
         break;
-      default   :
+      case JVC      :
+        irsend.sendJVC(data, bits, false);
+        Serial.print("JVC ("); //for debugging
+        break;
+      case SAMSUNG  :
+        irsend.sendSAMSUNG(data, bits);
+        Serial.print("SAMSUNG ("); //for debugging
+        break;
+      case WHYNTER  :
+        irsend.sendWhynter(data, bits);
+        Serial.print("WHYNTER ("); //for debugging
+        break;
+      case LG       :
+        irsend.sendLG(data, bits);
+        Serial.print("LG ("); //for debugging
+        break;
+      case DENON    :
+        irsend.sendDenon(data, bits);
+        Serial.print("DENON ("); //for debugging
+        break;
+      default       :
         Serial.print("UNKNOWN ("); //type not equal to above declared types (ignore signal)
     }
 
@@ -122,16 +142,19 @@ void loop() {
 
       //for debugging
       switch (decode_type) {
-        case NEC  : Serial.print("NEC: "); break;
-        case SONY : Serial.print("SONY: "); break;
-        case RC5  : Serial.print("RC5: "); break;
-        case RC6  : Serial.print("RC6: "); break;
-        default   :
-          canSend = false; //if the encode type is not a one defined above. send unknown signal via bluetooth
-          Serial.print("UNKNOWN: "); break;
+        case NEC      : Serial.print("NEC: "); break;
+        case SONY     : Serial.print("SONY: "); break;
+        case RC5      : Serial.print("RC5: "); break;
+        case RC6      : Serial.print("RC6: "); break;
+        case JVC      : Serial.print("JVC: "); break;
+        case SAMSUNG  : Serial.print("SAMSUNG: "); break;
+        case WHYNTER  : Serial.print("WHYNTER: "); break;
+        case LG       : Serial.print("LG: "); break;
+        case DENON    : Serial.print("DENON: "); break;
+        default       :
+                        canSend = false; //if the encode type is not a one defined above. send unknown signal via bluetooth
+                        Serial.print("UNKNOWN: "); break;
       }
-
-      if (results.bits == 0) canSend = false;
 
       Serial.println(output);
       if (canSend) btSerial.println(output);
