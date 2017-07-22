@@ -1,0 +1,3 @@
+[submodule "TVRemoteClient"]
+	path = TVRemoteClient
+	url = https://github.com/randilfernando/TVRemoteClient.git
